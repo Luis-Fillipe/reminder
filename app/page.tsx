@@ -1,11 +1,11 @@
 'use client';
-
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Input } from './components';
-import moment from "moment"
+import moment from "moment";
 import { useEffect, useState } from 'react';
+import { AiOutlineClose } from 'react-icons/ai';
 
 const schema = z.object({
   title: z.string().min(3, 'Por favor, informe um titulo válido!'),
@@ -35,16 +35,26 @@ export function setLocalStorage(key: string, value: unknown) {
 }
 
 export default function InputPage() {
-  const [data, setData] = useState(getStoredCartItems());
+  const [data, setData] = useState({});
 
-  function handleSetLocalStorage(obj: { title: string, date: string }) {
+  useEffect(() => {
     const storedData = getStoredCartItems();
-    const updatedData = { ...storedData };
+    setData(storedData);
+  }, []);
 
-    if (obj.date in updatedData) {
-      updatedData[obj.date].push({ title: obj.title });
+  function adjustDate(date) {
+    return moment(date).add(1, 'day').format('DD/MMM/YYYY');
+  }
+
+  function handleSetLocalStorage(obj) {
+    const updatedData = { ...data };
+
+    const adjustedDate = adjustDate(obj.date);
+
+    if (adjustedDate in updatedData) {
+      updatedData[adjustedDate].push({ title: obj.title });
     } else {
-      updatedData[obj.date] = [{ title: obj.title }];
+      updatedData[adjustedDate] = [{ title: obj.title }];
     }
 
     setLocalStorage('item_key', updatedData);
@@ -56,17 +66,29 @@ export default function InputPage() {
     resolver: zodResolver(schema)
   });
 
-  return (
-    <>
-      <h2>Lembretes</h2> 
+  function removeFromLocalStorage(date, title) {
+    const updatedData = { ...data };
+    const formattedDate = moment(date).format('DD/MMM/YYYY'); // Ajuste a data para o formato desejado, se necessário
 
-      <form onSubmit={handleSubmit((data) => handleSetLocalStorage({ title: data.title, date: moment(data.date).add('days', 1).format('DD/MMM/YYYY') }))}>
+    if (formattedDate in updatedData) {
+      updatedData[formattedDate] = updatedData[formattedDate].filter(item => item.title !== title);
+      setLocalStorage('item_key', updatedData);
+      setData(updatedData);
+    }
+  }
+
+  return (
+    <div className="p-4">
+      <h2 className="text-2xl mb-4">Cadastro de Lembretes</h2>
+
+      <form onSubmit={handleSubmit((data) => handleSetLocalStorage({ title: data.title, date: data.date }))} className="mb-4">
         <Input
           {...register('title')}
           type="text"
           placeholder='Titulo do Lembrete:'
           label='Titulo:'
           helperText={errors.title?.message}
+          className="mr-2"
         />
         <Input
           {...register('date')}
@@ -74,20 +96,29 @@ export default function InputPage() {
           placeholder='Data do lembrete:'
           label='Data:'
           helperText={errors.date?.message}
+          className="mr-2"
         />
-        <button type="submit">Enviar</button>
+        <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+          Criar
+        </button>
       </form>
-      
-      <div>
-        {Object.keys(data).map(date => (
-          <div key={date}>
-            <h3>{date}</h3>
-            {data[date].map((item: { title: string }, index: number) => (
-              <div key={index}>{item.title}</div>
-            ))}
-          </div>
-        ))}
+
+      <div style={{ marginTop: '20px' }}>
+        <h2 className="text-2xl mb-4">Lembretes</h2>
+        <div>
+          {Object.keys(data).map(date => (
+            <div key={date}>
+              {data[date].length > 0 && <h3>{date}</h3>}
+              {data[date].map((item: { title: string }, index: number) => (
+                <div key={index} className="flex items-center mb-2">
+                  <span>{item.title}</span>
+                  <AiOutlineClose onClick={() => removeFromLocalStorage(date, item.title)} className="ml-2" />
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
-    </>
+    </div>
   );
 }

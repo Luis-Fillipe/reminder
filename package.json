@@ -15,6 +15,7 @@
     "react": "^18",
     "react-dom": "^18",
     "react-hook-form": "^7.48.2",
+    "react-icons": "^4.11.0",
     "styled-components": "^6.1.1",
     "styled-theme": "^0.3.3",
     "zod": "^3.22.4"
@@ -26,7 +27,7 @@
     "@types/react-dom": "^18",
     "autoprefixer": "^10.0.1",
     "postcss": "^8",
-    "tailwindcss": "^3.3.0",
+    "tailwindcss": "^3.3.5",
     "typescript": "^5"
   }
 }

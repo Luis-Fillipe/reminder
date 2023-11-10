@@ -1,7 +1,7 @@
 import styled, {css} from 'styled-components'
 import {lighten} from 'polished'
 
-var blue = 'red';
+var blue = 'blue';
 
 export const Container = styled.div`
     display: flex;
@@ -19,6 +19,13 @@ export const HelperText = styled.p`
     font-size: 0.8rem;
     margin-top: 0.5rem;
 `;
+
+export const Button = styled.p`
+    color: red;
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+`;
+
 export const Label = styled.label`
     color: grey;
     font-size: 1rem;
@@ -27,7 +34,7 @@ export const Label = styled.label`
 export const Input = styled.input<{ hasError: boolean }> `
     padding: 1rem;
     border-radius: 8px;
-    border: 1px solid green;
+    border: 1px solid grey;
 
     &:focus{
         outline: 2px solid ${lighten(0.2, blue)};
