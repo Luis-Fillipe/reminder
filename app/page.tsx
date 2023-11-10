@@ -4,81 +4,72 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Input } from './components';
+import moment from "moment"
 import { useEffect, useState } from 'react';
 
 const schema = z.object({
   title: z.string().min(3, 'Por favor, informe um titulo válido!'),
-  //date: z.string().min(3, 'Por favor, informe uma data válida!'),
-  date: z.coerce.date().refine((data) => data.getTime() >= new Date().setHours(-24, 0, 0, 0), { message: "Por favor, selecione uma data de hoje em diante." })
+  date: z.coerce.date().refine((data) => data.getTime() >= new Date().setHours(0, 0, 0, 0), { message: "Por favor, selecione uma data de hoje em diante." })
 });
 
 type DataProps = z.infer<typeof schema>;
 
-export function getLocalStorage(key: string) {
-  const data = window.localStorage.getItem(key);
-  return JSON.parse(data!);
+export function getStoredCartItems() {
+  if (typeof window !== "undefined") {
+    const storedCartItems = localStorage.getItem("item_key");
+    if (storedCartItems !== null) {
+      try {
+        const cartItems = JSON.parse(storedCartItems);
+        return cartItems;
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  }
+  return {}; // Retorna um objeto vazio para o hashmap
 }
 
 export function setLocalStorage(key: string, value: unknown) {
   const data = JSON.stringify(value);
-  return window.localStorage.setItem(key, data);
+  window.localStorage.setItem(key, data);
 }
 
 export default function InputPage() {
   const [data, setData] = useState(getStoredCartItems());
 
-  useEffect(() => {
-    setData(data);
-  }, []);
+  function handleSetLocalStorage(obj: { title: string, date: string }) {
+    const storedData = getStoredCartItems();
+    const updatedData = { ...storedData };
 
-  function getStoredCartItems() {
-    if (typeof window !== "undefined") {
-      const storedCartItems = localStorage.getItem("item_key");
-      if (storedCartItems !== null) {
-        try {
-          const cartItems = JSON.parse(storedCartItems);
-          return cartItems;
-        } catch (error) {
-          console.error(error);
-        }
-      }
+    if (obj.date in updatedData) {
+      updatedData[obj.date].push({ title: obj.title });
+    } else {
+      updatedData[obj.date] = [{ title: obj.title }];
     }
-    return [];
-  }
 
-  function handleSetLocalStorage(obj: object) {
-    var data = getStoredCartItems();
-    data.push(obj);
-    data.sort(function (a, b) {
-      if (a.date < b.date) {
-        return -1;
-      } else {
-        return true;
-      }
-    });
-    setLocalStorage('item_key', data);
-    setData(data);
+    setLocalStorage('item_key', updatedData);
+    setData(updatedData);
   }
 
   const { register, handleSubmit, formState: { errors } } = useForm<DataProps>({
     mode: 'onBlur',
     resolver: zodResolver(schema)
-
   });
-  console.log(errors);
 
   return (
     <>
-      <h2> Lembretes </h2>
+      <h2>Lembretes</h2> 
 
-      <form onSubmit={handleSubmit((data) => handleSetLocalStorage({ title: data.title, date: data.date }))}>
-        <Input {...register('title')}
+      <form onSubmit={handleSubmit((data) => handleSetLocalStorage({ title: data.title, date: moment(data.date).add('days', 1).format('DD/MMM/YYYY') }))}>
+        <Input
+          {...register('title')}
           type="text"
           placeholder='Titulo do Lembrete:'
           label='Titulo:'
           helperText={errors.title?.message}
         />
-        <Input {...register('date')}
+        <Input
+          {...register('date')}
           type="date"
           placeholder='Data do lembrete:'
           label='Data:'
@@ -86,14 +77,17 @@ export default function InputPage() {
         />
         <button type="submit">Enviar</button>
       </form>
-      <div>Lembretes</div>
-      {data.map((index, key) =>
-        <p key={key.toString()}>{index.date}  <br /> {index.title}</p>
-
-      )
-      }
+      
+      <div>
+        {Object.keys(data).map(date => (
+          <div key={date}>
+            <h3>{date}</h3>
+            {data[date].map((item: { title: string }, index: number) => (
+              <div key={index}>{item.title}</div>
+            ))}
+          </div>
+        ))}
+      </div>
     </>
   );
 }
-//data.map(data => <div>{data.title}</div>
-//{data.lembretes.map(index => console.log(index.title))}
