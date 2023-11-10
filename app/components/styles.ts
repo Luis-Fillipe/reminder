@@ -35,7 +35,7 @@ export const Input = styled.input<{ hasError: boolean }> `
     padding: 1rem;
     border-radius: 8px;
     border: 1px solid grey;
-
+    width: 20%;
     &:focus{
         outline: 2px solid ${lighten(0.2, blue)};
         border-color: blue;

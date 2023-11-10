@@ -68,7 +68,7 @@ export default function InputPage() {
 
   function removeFromLocalStorage(date, title) {
     const updatedData = { ...data };
-    const formattedDate = moment(date).format('DD/MMM/YYYY'); // Ajuste a data para o formato desejado, se necessário
+    const formattedDate = moment(date).format('DD/MMM/YYYY');
 
     if (formattedDate in updatedData) {
       updatedData[formattedDate] = updatedData[formattedDate].filter(item => item.title !== title);
@@ -76,6 +76,10 @@ export default function InputPage() {
       setData(updatedData);
     }
   }
+
+  const sortedDates = Object.keys(data)
+    .map(date => moment(date, 'DD/MMM/YYYY').toDate())
+    .sort((a, b) => a - b);
 
   return (
     <div className="p-4">
@@ -98,23 +102,34 @@ export default function InputPage() {
           helperText={errors.date?.message}
           className="mr-2"
         />
-        <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+        <button type="submit" style={{ marginTop: '20px', backgroundColor: '#a6ccd3', borderRadius: '8px', width: '5%' }}>
           Criar
         </button>
       </form>
 
       <div style={{ marginTop: '20px' }}>
-        <h2 className="text-2xl mb-4">Lembretes</h2>
+        <h2>Lembretes</h2>
         <div>
-          {Object.keys(data).map(date => (
-            <div key={date}>
-              {data[date].length > 0 && <h3>{date}</h3>}
-              {data[date].map((item: { title: string }, index: number) => (
-                <div key={index} className="flex items-center mb-2">
-                  <span>{item.title}</span>
-                  <AiOutlineClose onClick={() => removeFromLocalStorage(date, item.title)} className="ml-2" />
-                </div>
-              ))}
+          {sortedDates.map(date => (
+            <div key={moment(date).format('DD/MMM/YYYY')}>
+              {data[moment(date).format('DD/MMM/YYYY')].length > 0 && (
+                <h3>{moment(date).format('DD/MMM/YYYY')}</h3>
+              )}
+              {data[moment(date).format('DD/MMM/YYYY')].map(
+                (item: { title: string }, index: number) => (
+                  <div key={index}>
+                    <span style={{ marginLeft: '20px' }}>{item.title}</span>
+                    <AiOutlineClose
+                      onClick={() =>
+                        removeFromLocalStorage(
+                          moment(date).format('DD/MMM/YYYY'),
+                          item.title
+                        )
+                      }
+                    />
+                  </div>
+                )
+              )}
             </div>
           ))}
         </div>
